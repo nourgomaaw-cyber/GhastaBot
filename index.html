@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#071426">
+  <title>ThumbType — Hand Tracking Keyboard</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <div class="brand">THUMBTYPE</div>
+        <div class="tagline">THUMB IS THE STYLUS · YOUR HANDS ARE THE KEYBOARD</div>
+      </div>
+      <span id="status" class="status">CAMERA OFF</span>
+    </header>
+
+    <section class="workspace">
+      <div class="camera-panel">
+        <video id="inputVideo" playsinline></video>
+        <canvas id="overlay"></canvas>
+        <div id="cameraMessage" class="camera-message">
+          <div class="camera-icon">◎</div>
+          <h2>Your hands are the keyboard</h2>
+          <p>Allow camera access, then touch a labeled fingertip/joint with your thumb.</p>
+        </div>
+        <div class="camera-label">LIVE HAND TRACKING</div>
+      </div>
+      <aside class="side-panel">
+        <h3>TRACKING</h3>
+        <div class="stat"><span>LEFT HAND</span><b id="leftState">NOT FOUND</b></div>
+        <div class="stat"><span>RIGHT HAND</span><b id="rightState">NOT FOUND</b></div>
+        <div class="stat"><span>ACTIVE KEY</span><b id="activeKey">—</b></div>
+        <div class="stat"><span>TOUCH SCORE</span><b id="touchScore">—</b></div>
+        <div class="hint">
+          <strong>HOW TO TYPE</strong>
+          <p>Touch the tip of your thumb to a labeled point on the same hand. A letter is entered once per touch. Lift your thumb before the next letter.</p>
+        </div>
+        <label class="toggle"><input id="showLabels" type="checkbox" checked> Show letters</label>
+        <label class="toggle"><input id="soundToggle" type="checkbox"> Key sound</label>
+      </aside>
+    </section>
+
+    <section class="typing-panel">
+      <div class="typing-header"><label for="textOutput">TEXT PLANE</label><div><button id="copyBtn">COPY TEXT</button><button id="clearBtn">CLEAR</button></div></div>
+      <textarea id="textOutput" spellcheck="false" placeholder="Touch your thumb to a labeled point to type..."></textarea>
+      <div class="bottom-row">
+        <span>SPACE: touch the center of your palm · BACKSPACE: thumb to wrist point</span>
+        <span id="count">0 CHARACTERS</span>
+      </div>
+    </section>
+    <footer>Runs in your browser · Camera permission required · Video stays on this page</footer>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
