@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b0910">
+  <title>Sign in or create account — Ghasta AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    :root{color-scheme:dark;--bg:#0b0910;--panel:#15111b;--line:#342b42;--text:#f5f0fa;--muted:#a39aa9;--purple:#bb91ff;--red:#ff8f81;--green:#a8dc88}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#7946a51f,transparent 44%),var(--bg);color:var(--text);font:14px 'DM Sans',sans-serif;display:grid;place-items:center;padding:20px}.auth-card{width:min(100%,430px);border:1px solid var(--line);background:#14111a;border-radius:22px;padding:32px;box-shadow:0 25px 90px #0006;text-align:center}.mark{width:48px;height:48px;border-radius:15px;background:var(--purple);color:#1d1428;display:grid;place-items:center;margin:0 auto 17px;font-weight:700;font-size:26px}.brand{font-size:18px;font-weight:700;direction:ltr}.brand span{color:var(--purple)}h1{font-size:26px;margin:27px 0 10px}.desc{color:#c0b7ca;line-height:1.8;font-size:14px;margin:0 0 10px}.help{color:var(--muted);font-size:12px;line-height:1.8;margin:0 0 24px}.google-wrap{display:flex;justify-content:center;min-height:44px}.status{min-height:22px;margin:14px 0 0;font-size:12px;line-height:1.6;color:var(--muted)}.status.error{color:var(--red)}.status.success{color:var(--green)}.account{display:none;margin:19px auto 0;padding:12px;background:#1b1722;border-radius:12px;color:#e3dce9}.account img{width:36px;height:36px;border-radius:50%;vertical-align:middle;margin-right:8px}.links{margin-top:25px;padding-top:19px;border-top:1px solid #292230;display:flex;justify-content:center;gap:17px}.links a{color:#cdb4ef;text-decoration:none;font-size:12px}.links a:hover{color:white}.config{display:none;text-align:left;border:1px solid #695233;background:#201a14;color:#e7c890;padding:12px;border-radius:10px;font-size:12px;line-height:1.7;margin-top:16px;overflow-wrap:anywhere}@media(max-width:480px){.auth-card{padding:26px 20px}h1{font-size:23px}}
+  </style>
+</head>
+<body>
+  <main class="auth-card">
+    <div class="mark">G</div>
+    <div class="brand">Ghasta <span>AI</span></div>
+    <h1>Create your Ghasta account</h1>
+    <p class="desc">Continue with your Gmail account to join Ghasta AI.</p>
+    <p class="help">First time here? Your Ghasta account is created automatically after Google verifies your email. Already have an account? The same button signs you in. No separate password needed.</p>
+    <div id="googleButton" class="google-wrap"></div>
+    <div id="status" class="status" role="status">Loading Google sign-in…</div>
+    <div id="configHelp" class="config">To activate sign-in, set <b>GOOGLE_CLIENT_ID</b> in the project’s private <code>.env</code> file. In Google Cloud, create a Web OAuth client and authorize <code>http://localhost:3000</code> as a JavaScript origin.</div>
+    <div id="account" class="account"></div>
+    <nav class="links"><a href="/">Back to Ghasta AI</a><a id="adminLink" href="/admin.html" hidden>Admin dashboard</a></nav>
+  </main>
+<script>
+  const statusBox=document.getElementById('status');let nonce='',clientId='';
+  function makeNonce(){const bytes=new Uint8Array(32);crypto.getRandomValues(bytes);return Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('')}
+  function setStatus(message,type=''){statusBox.textContent=message;statusBox.className='status '+type}
+  async function refreshAccount(){const r=await fetch('/api/auth/me');const d=await r.json();if(!d.user)return false;const account=document.getElementById('account');account.style.display='block';account.textContent='Signed in as '+d.user.name+' ('+d.user.email+')';if(d.user.isAdmin)document.getElementById('adminLink').hidden=false;setStatus('Your Ghasta account is ready.','success');return true}
+  function renderButton(){nonce=makeNonce();google.accounts.id.initialize({client_id:clientId,nonce,callback:handleCredential});const button=document.getElementById('googleButton');button.replaceChildren();google.accounts.id.renderButton(button,{theme:'filled_black',size:'large',shape:'pill',text:'continue_with',width:260})}
+  async function handleCredential(response){setStatus('Verifying your Google account…');try{const r=await fetch('/api/auth/google',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({credential:response.credential,nonce})});const d=await r.json();if(!r.ok)throw new Error(d.error||'Google sign-in failed.');await refreshAccount()}catch(e){setStatus(e.message,'error');if(clientId)renderButton()}}
+  async function init(){try{if(await refreshAccount())return;const config=await fetch('/api/auth/config').then(r=>r.json());if(!config.clientId){document.getElementById('configHelp').style.display='block';setStatus('Google sign-up is not configured yet.');return}clientId=config.clientId;let tries=0;while(!window.google?.accounts?.id&&tries++<80)await new Promise(resolve=>setTimeout(resolve,100));if(!window.google?.accounts?.id){setStatus('Google sign-in could not load. Check your connection.','error');return}renderButton();setStatus('Choose a Gmail account to continue.')}catch(e){setStatus(e.message,'error')}}
+  init();
+</script>
+</body>
+</html>
